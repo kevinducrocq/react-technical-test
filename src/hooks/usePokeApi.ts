@@ -1,6 +1,6 @@
 import { MainClient, Name, NamedAPIResourceList } from "pokenode-ts";
-import { UseBaseQueryOptions, useQuery } from "react-query";
 import { useId } from "react";
+import { UseBaseQueryOptions, useQuery } from "react-query";
 
 const api = new MainClient();
 
