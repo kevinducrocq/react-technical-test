@@ -28,7 +28,23 @@ export const PokeTeam = ({ team, onRemove }: PokeTeamProps) => {
   }, [team, refetchTypes]);
 
   if (team.length === 0) {
-    return <div>Vous n'avez pas de pokémon dans votre équipe</div>;
+    return (
+      <div
+        style={{
+          border: "1px solid black",
+          background: "white",
+          color: "blue",
+          width: 400,
+          padding: "1em",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <h2>Mon équipe</h2>
+        <span>Vous n'avez pas encore de pokémon dans votre équipe</span>
+      </div>
+    );
   }
 
   if (error) {
@@ -36,22 +52,59 @@ export const PokeTeam = ({ team, onRemove }: PokeTeamProps) => {
   }
 
   return (
-    <table style={{ border: "1px solid black", background: "white", color: "blue", width: 400, padding: "1em" }}>
-      <thead>
-        <tr>
-          <th colSpan={2}>
-            <h2>Mon équipe</h2>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
+    <div
+      style={{
+        border: "1px solid black",
+        background: "white",
+        color: "blue",
+        width: 400,
+        padding: "1em",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <h2>Mon équipe</h2>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "1em" }}>
         {team.map((pokemon) => (
-          <tr key={pokemon.id}>
-            <td>
-              {pokemon.name}
-              <button onClick={() => onRemove(pokemon)}>Retirer de l'équipe</button>
-            </td>
-            <td>
+          <div
+            key={pokemon.id}
+            style={{
+              border: "1px solid black",
+              borderRadius: "15px",
+              padding: "1em",
+              color: "blue",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1em",
+              }}
+            >
+              <h2>{pokemon.name}</h2>
+              <button
+                onClick={() => onRemove(pokemon)}
+                style={{
+                  border: "1px solid black",
+                  padding: "0.5em",
+                  background: "white",
+                  color: "blue",
+                  cursor: "pointer",
+                  fontSize: "10px",
+                }}
+              >
+                - Retirer de l'équipe
+              </button>
+            </div>
+            <div>
               {typesLoading ? (
                 <div>Loading...</div>
               ) : (
@@ -59,15 +112,15 @@ export const PokeTeam = ({ team, onRemove }: PokeTeamProps) => {
                   <div
                     key={index}
                     style={{
-                      border: "1px solid black",
+                      border: "1px solid gray",
                       padding: "1em",
                       margin: "1em",
                       background: "white",
                       color: "blue",
                     }}
                   >
-                    <h2>Type : {type.name}</h2>
-                    <span>Double dommages infligés à :</span>
+                    <h4>Type : {type.name}</h4>
+                    <h4>Double dommages infligés à :</h4>
                     <div
                       style={{
                         display: "flex",
@@ -77,7 +130,8 @@ export const PokeTeam = ({ team, onRemove }: PokeTeamProps) => {
                         <span key={index}>{type.name}, </span>
                       ))}
                     </div>
-                    <span>Double dommages reçus de :</span>
+                    <hr />
+                    <h4>Double dommages reçus de :</h4>
                     <div
                       style={{
                         display: "flex",
@@ -90,10 +144,10 @@ export const PokeTeam = ({ team, onRemove }: PokeTeamProps) => {
                   </div>
                 ))
               )}
-            </td>
-          </tr>
+            </div>
+          </div>
         ))}
-      </tbody>
-    </table>
+      </div>
+    </div>
   );
 };

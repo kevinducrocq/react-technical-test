@@ -46,8 +46,20 @@ function Pokemon({ pokemon, onAddToTeam, isPokemonInTeam }: PokemonProps) {
             {getLocalizedName(species)}
           </Link>
           {/* Button to add the Pokemon to the team */}
-          <button disabled={isPokemonInTeam(pokemon)} onClick={() => onAddToTeam(pokemon)}>
-            Ajouter à l'équipe
+          <button
+            disabled={isPokemonInTeam(pokemon)}
+            onClick={() => onAddToTeam(pokemon)}
+            style={{
+              border: "1px solid black",
+              padding: "0.5em",
+              margin: "0.5em",
+              background: "white",
+              color: "blue",
+              cursor: "pointer",
+              fontSize: "10px",
+            }}
+          >
+            + Ajouter à l'équipe
           </button>
         </div>
       </td>
