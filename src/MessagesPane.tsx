@@ -6,14 +6,20 @@ import { Issue } from "./types/issue";
 import { Comment } from "./types/comment";
 import { useIssueContext } from "./context/IssueContext";
 import { useEffect, useState } from "react";
-import { Checkbox, Chip, Sheet } from "@mui/joy";
+import { Box, Button, Checkbox, Chip, Sheet } from "@mui/joy";
+import { Event } from "./types/event";
 
 export default function MessagesPane() {
   const { selectedIssue: issueId } = useIssueContext();
   const issue = useFetch<Issue>({ url: `https://api.github.com/repos/facebook/react/issues/${issueId}` });
   const comments = useFetch<Comment[]>({ url: issue.data?.comments_url }, { enabled: issue.isFetched });
+  const events = useFetch<Event[]>(
+    { url: `https://api.github.com/repos/facebook/react/issues/${issueId}/events` },
+    { enabled: issue.isFetched },
+  );
 
   const [filterUserComments, setFilterUserComments] = useState<{ [key: string]: boolean }>({});
+  const [showEvents, setShowEvents] = useState(true);
 
   useEffect(() => {
     if (comments.data) {
@@ -27,6 +33,35 @@ export default function MessagesPane() {
   }, [comments.data]);
 
   const filteredComments = comments.data?.filter((comment) => filterUserComments[comment.user.login]);
+  const filteredEvents = showEvents ? events.data : [];
+
+  const timeline = [...(filteredComments || []), ...(filteredEvents || [])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+
+  const renderTimelineItem = (item: Comment | Event) => {
+    if ("body" in item) {
+      // It's a comment
+      return (
+        <ChatBubble
+          key={item.id}
+          variant={item.user.login === issue.data!.user.login ? "solid" : "outlined"}
+          body={item.body as string}
+          user={item.user}
+          created_at={new Date(item.created_at).toLocaleString()}
+        />
+      );
+    } else {
+      // It's an event
+      return (
+        <Box key={item.id} sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Typography level="body-sm">
+            {item.actor.login} {item.event} at {new Date(item.created_at).toLocaleString()}
+          </Typography>
+        </Box>
+      );
+    }
+  };
 
   return (
     <Sheet
@@ -37,18 +72,6 @@ export default function MessagesPane() {
         backgroundColor: "background.level1",
       }}
     >
-      {Object.keys(filterUserComments).map((user) => (
-        <Stack direction="row" alignItems="center" spacing={1} key={user}>
-          <Checkbox
-            checked={filterUserComments[user]}
-            onChange={(event) => {
-              const isChecked = event.target.checked;
-              setFilterUserComments((prev) => ({ ...prev, [user]: isChecked }));
-            }}
-          />
-          <Typography>Filter comments from {user}</Typography>
-        </Stack>
-      ))}
       {issue.data && (
         <Stack
           direction="column"
@@ -84,16 +107,28 @@ export default function MessagesPane() {
           <Typography level="body-sm">{issue.data.user.login}</Typography>
         </Stack>
       )}
-      {filteredComments && (
-        <Stack spacing={2} justifyContent="flex-end" px={2} py={3}>
-          <ChatBubble variant="solid" {...issue.data!} />
-          {filteredComments.map((comment) => (
-            <ChatBubble
-              key={comment.id}
-              variant={comment.user.login === issue.data!.user.login ? "solid" : "outlined"}
-              {...comment}
+      <Box m={5}>
+        {Object.keys(filterUserComments).map((user) => (
+          <Stack direction="row" alignItems="center" spacing={1} key={user}>
+            <Checkbox
+              checked={filterUserComments[user]}
+              onChange={(event) => {
+                const isChecked = event.target.checked;
+                setFilterUserComments((prev) => ({ ...prev, [user]: isChecked }));
+              }}
             />
-          ))}
+            <Typography>Show comments from {user}</Typography>
+          </Stack>
+        ))}
+      </Box>
+
+      <Box m={5}>
+        <Button onClick={() => setShowEvents(!showEvents)}>{showEvents ? "HIDE EVENTS" : "SHOW EVENTS"}</Button>
+      </Box>
+
+      {timeline && (
+        <Stack spacing={2} justifyContent="flex-end" px={2} py={3}>
+          {timeline.map(renderTimelineItem)}
         </Stack>
       )}
     </Sheet>

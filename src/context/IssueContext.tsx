@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
+import { PropsWithChildren, createContext, useContext, useState } from "react";
 
 // Création d'un contexte pour l'ID de l'issue
 
