@@ -4,34 +4,16 @@ import Stack from "@mui/joy/Stack";
 import Typography from "@mui/joy/Typography";
 import ChatBubble from "./ChatBubble";
 import useFetch from "./useFetch";
-
-type User = {
-  login: string;
-  avatar_url: string;
-};
-
-type Issue = {
-  id: number;
-  created_at: string;
-  user: User;
-
-  number: number;
-  title: string;
-  body: string;
-  comments_url: string;
-};
-
-type Comment = {
-  id: number;
-  created_at: string;
-  user: User;
-
-  body: string;
-};
+import { Issue } from "./types/issue";
+import { Comment } from "./types/comment";
+import { useIssueContext } from "./context/IssueContext";
 
 export default function MessagesPane() {
-  const issue = useFetch<Issue>({ url: "https://api.github.com/repos/facebook/react/issues/7901" });
+  const { issue: issueId } = useIssueContext();
+  const issue = useFetch<Issue>({ url: `https://api.github.com/repos/facebook/react/issues/${issueId}` });
   const comments = useFetch<Comment[]>({ url: issue.data?.comments_url }, { enabled: issue.isFetched });
+
+  console.log("issue", issue);
 
   return (
     <Sheet
