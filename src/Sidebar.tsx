@@ -2,16 +2,13 @@ import Sheet from "@mui/joy/Sheet";
 import useFetch from "./useFetch";
 import { Issue } from "./types/issue";
 import { useIssueContext } from "./context/IssueContext";
-import { Autocomplete } from "@mui/joy";
+import { Autocomplete, Avatar, Badge, Box, List, ListItem, Typography } from "@mui/joy";
+import { User } from "./types/user";
 
 export default function Sidebar() {
   // On fetch les issues de facebook/react
   const issues = useFetch<Issue[]>({
     url: "https://api.github.com/repos/facebook/react/issues",
-    // headers: {
-    //   // On a besoin d'un token pour accéder à l'API de GitHub, pour éviter d'être limité dans le nombre de requêtes
-    //   Authorization: `token ${import.meta.env.REACT_APP_GITHUB_TOKEN}`,
-    // },
   });
 
   // On récupère le contexte de l'issue
@@ -24,6 +21,14 @@ export default function Sidebar() {
       value: issue.number.toString(),
     })) || [];
 
+  const usersFromIssues: User[] = issues.data?.map((issue) => issue.user) || [];
+
+  // On récupère les utilisateurs, certains sont en double; on les filtre
+  const users: User[] = usersFromIssues.filter(
+    (user, index, self) => index === self.findIndex((t) => t.login === user.login),
+  );
+
+  console.log("usersFromIssues", usersFromIssues);
   return (
     <Sheet
       className="Sidebar"
@@ -34,6 +39,8 @@ export default function Sidebar() {
         top: 0,
         p: 2,
         flexShrink: 0,
+        maxHeight: "100vdh",
+        overflowY: "auto",
         display: "flex",
         flexDirection: "column",
         gap: 2,
@@ -50,6 +57,20 @@ export default function Sidebar() {
           value && setIssue(value);
         }}
       />
+
+      <Box>
+        <Typography component="h3">Users</Typography>
+        <List>
+          {users.map((user) => (
+            <ListItem key={user.login} sx={{ display: "flex", gap: 1 }}>
+              <Avatar src={user.avatar_url} />
+              <Badge badgeContent={usersFromIssues.filter((u) => u.login === user.login).length} color="primary">
+                <Typography>{user.login}</Typography>
+              </Badge>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
     </Sheet>
   );
 }
