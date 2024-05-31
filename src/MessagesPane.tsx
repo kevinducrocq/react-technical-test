@@ -1,5 +1,3 @@
-import Chip from "@mui/joy/Chip";
-import Sheet from "@mui/joy/Sheet";
 import Stack from "@mui/joy/Stack";
 import Typography from "@mui/joy/Typography";
 import ChatBubble from "./ChatBubble";
@@ -7,13 +5,28 @@ import useFetch from "./useFetch";
 import { Issue } from "./types/issue";
 import { Comment } from "./types/comment";
 import { useIssueContext } from "./context/IssueContext";
+import { useEffect, useState } from "react";
+import { Checkbox, Chip, Sheet } from "@mui/joy";
 
 export default function MessagesPane() {
-  const { issue: issueId } = useIssueContext();
+  const { selectedIssue: issueId } = useIssueContext();
   const issue = useFetch<Issue>({ url: `https://api.github.com/repos/facebook/react/issues/${issueId}` });
   const comments = useFetch<Comment[]>({ url: issue.data?.comments_url }, { enabled: issue.isFetched });
 
-  console.log("issue", issue);
+  const [filterUserComments, setFilterUserComments] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    if (comments.data) {
+      const uniqueUsers = Array.from(new Set(comments.data.map((comment) => comment.user.login)));
+      setFilterUserComments(
+        uniqueUsers.reduce((acc, user) => {
+          return { ...acc, [user]: true };
+        }, {}),
+      );
+    }
+  }, [comments.data]);
+
+  const filteredComments = comments.data?.filter((comment) => filterUserComments[comment.user.login]);
 
   return (
     <Sheet
@@ -24,6 +37,18 @@ export default function MessagesPane() {
         backgroundColor: "background.level1",
       }}
     >
+      {Object.keys(filterUserComments).map((user) => (
+        <Stack direction="row" alignItems="center" spacing={1} key={user}>
+          <Checkbox
+            checked={filterUserComments[user]}
+            onChange={(event) => {
+              const isChecked = event.target.checked;
+              setFilterUserComments((prev) => ({ ...prev, [user]: isChecked }));
+            }}
+          />
+          <Typography>Filter comments from {user}</Typography>
+        </Stack>
+      ))}
       {issue.data && (
         <Stack
           direction="column"
@@ -59,10 +84,10 @@ export default function MessagesPane() {
           <Typography level="body-sm">{issue.data.user.login}</Typography>
         </Stack>
       )}
-      {comments.data && (
+      {filteredComments && (
         <Stack spacing={2} justifyContent="flex-end" px={2} py={3}>
           <ChatBubble variant="solid" {...issue.data!} />
-          {comments.data.map((comment) => (
+          {filteredComments.map((comment) => (
             <ChatBubble
               key={comment.id}
               variant={comment.user.login === issue.data!.user.login ? "solid" : "outlined"}

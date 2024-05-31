@@ -1,34 +1,44 @@
 import Sheet from "@mui/joy/Sheet";
-import useFetch from "./useFetch";
-import { Issue } from "./types/issue";
+
 import { useIssueContext } from "./context/IssueContext";
 import { Autocomplete, Avatar, Badge, Box, List, ListItem, Typography } from "@mui/joy";
 import { User } from "./types/user";
+import useFetch from "./useFetch";
+import { Issue } from "./types/issue";
+
+type Option = {
+  value: number;
+  label: string;
+};
 
 export default function Sidebar() {
   // On fetch les issues de facebook/react
   const issues = useFetch<Issue[]>({
     url: "https://api.github.com/repos/facebook/react/issues",
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_REACT_APP_GITHUB_TOKEN}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
   });
 
-  // On récupère le contexte de l'issue
-  const { issue, setIssue } = useIssueContext();
-
-  // On transforme les issues en options pour l'autocomplete
-  const issuesOptions =
+  // On crée une liste d'options pour l'autocomplete
+  const issuesOptions: Option[] =
     issues.data?.map((issue) => ({
-      label: issue.number.toString() + " - " + issue.title.substring(0, 25) + "...",
-      value: issue.number.toString(),
+      value: issue.number,
+      label: issue.title,
     })) || [];
 
-  const usersFromIssues: User[] = issues.data?.map((issue) => issue.user) || [];
+  // On récupère le contexte de l'issue
+  const { selectedIssue, setSelectedIssue } = useIssueContext();
+
+  // On fetch les utilisateurs des issues
+  const usersFromIssues = issues.data?.map((issue) => issue.user) || [];
 
   // On récupère les utilisateurs, certains sont en double; on les filtre
   const users: User[] = usersFromIssues.filter(
     (user, index, self) => index === self.findIndex((t) => t.login === user.login),
   );
 
-  console.log("usersFromIssues", usersFromIssues);
   return (
     <Sheet
       className="Sidebar"
@@ -50,11 +60,13 @@ export default function Sidebar() {
     >
       <Autocomplete
         id="combo-box-demo"
-        options={issuesOptions.map((option) => option.label)}
-        value={issue}
-        sx={{ width: 265 }}
+        options={issuesOptions.map((option: Option) => option.label)}
+        value={selectedIssue}
         onChange={(_, value) => {
-          value && setIssue(value);
+          const selectedIssue = issuesOptions.find((option: Option) => option.label === value);
+          if (selectedIssue) {
+            setSelectedIssue(selectedIssue.value.toString());
+          }
         }}
       />
 
